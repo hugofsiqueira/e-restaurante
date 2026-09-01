@@ -1,0 +1,94 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-usuario-table
+      author: e-restaurante
+      changes:
+        - createTable:
+            tableName: usuario
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: dtype
+                  type: VARCHAR(31)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: login
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: senha
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: logradouro
+                  type: VARCHAR(200)
+              - column:
+                  name: numero
+                  type: VARCHAR(20)
+              - column:
+                  name: complemento
+                  type: VARCHAR(100)
+              - column:
+                  name: bairro
+                  type: VARCHAR(100)
+              - column:
+                  name: cidade
+                  type: VARCHAR(100)
+              - column:
+                  name: estado
+                  type: CHAR(2)
+              - column:
+                  name: cep
+                  type: VARCHAR(10)
+              - column:
+                  name: data_ultima_alteracao
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 001-fix-estado-column-type
+      author: e-restaurante
+      changes:
+        - modifyDataType:
+            tableName: usuario
+            columnName: estado
+            newDataType: VARCHAR(2)
+
+  - changeSet:
+      id: 001-create-usuario-indexes
+      author: e-restaurante
+      changes:
+        - createIndex:
+            tableName: usuario
+            indexName: idx_usuario_nome
+            columns:
+              - column:
+                  name: nome
+        - createIndex:
+            tableName: usuario
+            indexName: idx_usuario_email
+            columns:
+              - column:
+                  name: email
