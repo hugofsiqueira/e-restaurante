@@ -413,7 +413,7 @@ A seta de dependência NUNCA aponta para fora do núcleo. O domínio não conhec
 
 ```bash
 # Clonar o repositório
-git clone [URL_DO_REPOSITORIO]
+git clone https://github.com/hugofsiqueira/e-restaurante
 cd e-restaurante
 
 # Subir banco de dados e aplicação
@@ -591,7 +591,7 @@ O mapeamento entre `Usuario` (domínio) e `UsuarioEntity` (JPA) exigiu métodos 
 
 | Artefato | Tipo | Localização |
 |---|---|---|
-| Código-fonte da aplicação | Repositório Git | [URL_DO_REPOSITORIO] |
+| Código-fonte da aplicação | Repositório Git | https://github.com/hugofsiqueira/e-restaurante |
 | Este relatório técnico | PDF | Submetido na plataforma FIAP |
 | Swagger UI (interativo) | Web | `http://localhost:8080/swagger-ui.html` (com app rodando) |
 | OpenAPI spec (JSON) | Endpoint | `http://localhost:8080/v3/api-docs` (com app rodando) |
@@ -602,7 +602,7 @@ O mapeamento entre `Usuario` (domínio) e `UsuarioEntity` (JPA) exigiu métodos 
 
 **Instruções para execução:**
 ```bash
-git clone [URL_DO_REPOSITORIO]
+git clone https://github.com/hugofsiqueira/e-restaurante
 cd e-restaurante
 docker compose up --build
 # Aguardar log: "Started ERestauranteApplication"
