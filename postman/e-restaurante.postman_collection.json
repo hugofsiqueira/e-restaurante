@@ -1,0 +1,515 @@
+{
+  "info": {
+    "name": "e-Restaurante — API v1",
+    "description": "Coleção de testes para a API do e-Restaurante (Fase 1 — Domínio de Usuário).\n\nBase URL: http://localhost:8080\n\nPré-requisito: aplicação rodando via `docker compose up --build`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "usuarioId",
+      "value": "1",
+      "type": "string",
+      "description": "ID do usuário criado nos testes — atualizar após o POST de cadastro"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Usuários",
+      "item": [
+        {
+          "name": "1.1 Cadastrar usuário — sucesso (Cliente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Retorna id', () => pm.expect(pm.response.json().id).to.be.a('number'));",
+                  "pm.test('Tipo correto', () => pm.expect(pm.response.json().tipo).to.eql('CLIENTE'));",
+                  "// Salva o id para os próximos requests",
+                  "pm.collectionVariables.set('usuarioId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao.silva@email.com\",\n  \"login\": \"joaosilva\",\n  \"senha\": \"senha123\",\n  \"tipo\": \"CLIENTE\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"42\",\n    \"complemento\": \"Apto 101\",\n    \"bairro\": \"Jardim Paulista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310-100\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Cadastrar usuário — sucesso (Dono de Restaurante)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Tipo correto', () => pm.expect(pm.response.json().tipo).to.eql('DONO_RESTAURANTE'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Souza\",\n  \"email\": \"maria.souza@restaurante.com\",\n  \"login\": \"mariarestaurante\",\n  \"senha\": \"senha456\",\n  \"tipo\": \"DONO_RESTAURANTE\",\n  \"endereco\": {\n    \"logradouro\": \"Av. Paulista\",\n    \"numero\": \"1000\",\n    \"complemento\": \"Sala 5\",\n    \"bairro\": \"Bela Vista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01311-000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Cadastrar usuário — erro: e-mail duplicado (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('ProblemDetail com title correto', () => pm.expect(pm.response.json().title).to.eql('Conflito de dados'));",
+                  "pm.test('Detail menciona o email', () => pm.expect(pm.response.json().detail).to.include('joao.silva@email.com'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Outro João\",\n  \"email\": \"joao.silva@email.com\",\n  \"login\": \"outrjoao\",\n  \"senha\": \"senha789\",\n  \"tipo\": \"CLIENTE\",\n  \"endereco\": {\n    \"logradouro\": \"Rua B\",\n    \"numero\": \"1\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01000-000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "1.4 Cadastrar usuário — erro: campos obrigatórios ausentes (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', () => pm.response.to.have.status(422));",
+                  "pm.test('ProblemDetail com title correto', () => pm.expect(pm.response.json().title).to.eql('Dados inválidos'));",
+                  "pm.test('Lista de erros presente', () => pm.expect(pm.response.json().errors).to.be.an('array').that.is.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"\",\n  \"email\": \"email-invalido\",\n  \"login\": \"\",\n  \"senha\": \"123\",\n  \"tipo\": \"CLIENTE\",\n  \"endereco\": {\n    \"logradouro\": \"Rua\",\n    \"numero\": \"1\",\n    \"bairro\": \"Bairro\",\n    \"cidade\": \"Cidade\",\n    \"estado\": \"SP\",\n    \"cep\": \"01000-000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "1.5 Buscar usuários por nome — sucesso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Resultado contém João', () => {",
+                  "  const nomes = pm.response.json().map(u => u.nome);",
+                  "  pm.expect(nomes.some(n => n.toLowerCase().includes('jo'))).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios?nome=Jo",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios"],
+              "query": [{ "key": "nome", "value": "Jo" }]
+            }
+          }
+        },
+        {
+          "name": "1.6 Buscar usuários por nome — sem resultado (lista vazia)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna lista vazia', () => pm.expect(pm.response.json()).to.be.an('array').that.is.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios?nome=UsuarioInexistente99",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios"],
+              "query": [{ "key": "nome", "value": "UsuarioInexistente99" }]
+            }
+          }
+        },
+        {
+          "name": "1.7 Atualizar usuário — sucesso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Nome atualizado', () => pm.expect(pm.response.json().nome).to.eql('João da Silva'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João da Silva\",\n  \"email\": \"joao.silva@email.com\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Acácias\",\n    \"numero\": \"100\",\n    \"complemento\": \"Casa\",\n    \"bairro\": \"Vila Madalena\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"05435-000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "{{usuarioId}}"]
+            }
+          }
+        },
+        {
+          "name": "1.8 Atualizar usuário — erro: usuário não encontrado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('ProblemDetail com title correto', () => pm.expect(pm.response.json().title).to.eql('Recurso não encontrado'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Fantasma\",\n  \"email\": \"fantasma@email.com\",\n  \"endereco\": {\n    \"logradouro\": \"Rua Nenhuma\",\n    \"numero\": \"0\",\n    \"bairro\": \"Vazio\",\n    \"cidade\": \"Lugar Nenhum\",\n    \"estado\": \"SP\",\n    \"cep\": \"00000-000\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "999999"]
+            }
+          }
+        },
+        {
+          "name": "1.9 Atualizar usuário — erro: e-mail já usado por outro usuário (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('ProblemDetail com title correto', () => pm.expect(pm.response.json().title).to.eql('Conflito de dados'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João da Silva\",\n  \"email\": \"maria.souza@restaurante.com\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"42\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310-100\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "{{usuarioId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Senha",
+      "item": [
+        {
+          "name": "2.1 Trocar senha — sucesso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senhaAtual\": \"senha123\",\n  \"novaSenha\": \"novaSenha456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}/senha",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "{{usuarioId}}", "senha"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Trocar senha — erro: senha atual incorreta (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('ProblemDetail com title correto', () => pm.expect(pm.response.json().title).to.eql('Regra de negócio violada'));",
+                  "pm.test('Detail menciona senha', () => pm.expect(pm.response.json().detail).to.include('Senha atual incorreta'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senhaAtual\": \"senhaErrada999\",\n  \"novaSenha\": \"qualquerCoisa\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}/senha",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "{{usuarioId}}", "senha"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Trocar senha — erro: usuário não encontrado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"senhaAtual\": \"senha123\",\n  \"novaSenha\": \"novaSenha456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/999999/senha",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "999999", "senha"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Login",
+      "item": [
+        {
+          "name": "3.1 Login — sucesso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna login do usuário', () => pm.expect(pm.response.json().login).to.eql('joaosilva'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"joaosilva\",\n  \"senha\": \"novaSenha456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "login"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Login — erro: senha incorreta (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('ProblemDetail presente', () => pm.expect(pm.response.json().title).to.eql('Regra de negócio violada'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"joaosilva\",\n  \"senha\": \"senhaErrada\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "login"]
+            }
+          }
+        },
+        {
+          "name": "3.3 Login — erro: login inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('ProblemDetail presente', () => pm.expect(pm.response.json().title).to.eql('Recurso não encontrado'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"loginQueNaoExiste\",\n  \"senha\": \"qualquerSenha\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Excluir usuário",
+      "item": [
+        {
+          "name": "4.1 Excluir usuário — erro: não encontrado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/999999",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "999999"]
+            }
+          }
+        },
+        {
+          "name": "4.2 Excluir usuário — sucesso (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["v1", "usuarios", "{{usuarioId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
