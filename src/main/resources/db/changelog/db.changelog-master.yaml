@@ -1,3 +1,4 @@
 databaseChangeLog:
-  - include:
-      file: db/changelog/changelogs/001-create-usuario-table.yaml
+  - includeAll:
+      path: db/changelog/changelogs/
+      relativeToChangelogFile: false

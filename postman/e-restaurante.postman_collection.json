@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "e-Restaurante — API v1",
-    "description": "Coleção de testes para a API do e-Restaurante (Fase 1 — Domínio de Usuário).\n\nBase URL: http://localhost:8080\n\nPré-requisito: aplicação rodando via `docker compose up --build`.",
+    "description": "Coleção de testes para a API do e-Restaurante (Fase 2).\n\nBase URL: http://localhost:8080\n\nPré-requisito: aplicação rodando via `docker compose up --build`.\n\nOrdem de execução recomendada:\n1. Criar Tipos de Usuário (pasta 5)\n2. Cadastrar Usuários (pasta 1) — cria DONO_RESTAURANTE cujo id vai para `donoId`\n3. Restaurantes (pasta 6)\n4. Demais pastas em ordem",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -14,10 +14,584 @@
       "key": "usuarioId",
       "value": "1",
       "type": "string",
-      "description": "ID do usuário criado nos testes — atualizar após o POST de cadastro"
+      "description": "ID do usuário criado nos testes — atualizado automaticamente após o POST de cadastro"
+    },
+    {
+      "key": "tipoClienteId",
+      "value": "1",
+      "type": "string",
+      "description": "ID do TipoUsuario CLIENTE — atualizado automaticamente após o POST de tipo"
+    },
+    {
+      "key": "tipoDonoId",
+      "value": "2",
+      "type": "string",
+      "description": "ID do TipoUsuario DONO_RESTAURANTE — atualizado automaticamente após o POST de tipo"
+    },
+    {
+      "key": "restauranteId",
+      "value": "1",
+      "type": "string",
+      "description": "ID do restaurante criado nos testes — atualizado automaticamente após o POST de restaurante"
+    },
+    {
+      "key": "donoId",
+      "value": "2",
+      "type": "string",
+      "description": "ID do DonoRestaurante — atualizado automaticamente após o POST de usuário do tipo DONO_RESTAURANTE"
+    },
+    {
+      "key": "itemCardapioId",
+      "value": ""
+    },
+    {
+      "key": "tipoTesteId",
+      "value": ""
+    },
+    {
+      "key": "_ts",
+      "value": ""
+    },
+    {
+      "key": "emailCliente",
+      "value": ""
+    },
+    {
+      "key": "loginCliente",
+      "value": ""
+    },
+    {
+      "key": "emailDono",
+      "value": ""
+    },
+    {
+      "key": "loginDono",
+      "value": ""
+    },
+    {
+      "key": "nomeRestaurante",
+      "value": ""
+    },
+    {
+      "key": "nomeItemCardapio",
+      "value": ""
     }
   ],
   "item": [
+    {
+      "name": "0. Limpeza",
+      "item": [
+        {
+          "name": "Excluir item do cardápio (cleanup)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/{{itemCardapioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "{{itemCardapioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Sempre gera novos valores únicos no início de cada execução",
+                  "const ts = Date.now();",
+                  "pm.collectionVariables.set('_ts',           String(ts));",
+                  "pm.collectionVariables.set('emailCliente',   `cliente_${ts}@test.com`);",
+                  "pm.collectionVariables.set('loginCliente',   `cliente_${ts}`);",
+                  "pm.collectionVariables.set('emailDono',      `dono_${ts}@test.com`);",
+                  "pm.collectionVariables.set('loginDono',      `dono_${ts}`);",
+                  "pm.collectionVariables.set('nomeRestaurante',`Restaurante Teste ${ts}`);",
+                  "pm.collectionVariables.set('nomeItemCardapio',`Pizza Teste ${ts}`);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 204 = deleted, 404 = never existed, 400 = variable empty — all ok",
+                  "pm.test('Cleanup item cardápio', () => {",
+                  "    pm.expect([204, 404, 400]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir restaurante (cleanup)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes/{{restauranteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes",
+                "{{restauranteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Cleanup restaurante', () => {",
+                  "    pm.expect([204, 404, 400]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir dono de restaurante (cleanup)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/{{donoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "{{donoId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Cleanup dono', () => {",
+                  "    pm.expect([204, 404, 400]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir cliente (cleanup)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "{{usuarioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Cleanup cliente', () => {",
+                  "    pm.expect([204, 404, 400]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Tipos de Usuário",
+      "item": [
+        {
+          "name": "5.1 Carregar tipos base (GET)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Tipos base existem e IDs armazenados', () => {",
+                  "    const tipos = pm.response.json();",
+                  "    pm.expect(tipos).to.be.an('array').with.length.at.least(2);",
+                  "    const cliente = tipos.find(t => t.nome === 'CLIENTE');",
+                  "    const dono = tipos.find(t => t.nome === 'DONO_RESTAURANTE');",
+                  "    pm.expect(cliente, 'CLIENTE deve existir').to.not.be.undefined;",
+                  "    pm.expect(dono, 'DONO_RESTAURANTE deve existir').to.not.be.undefined;",
+                  "    pm.collectionVariables.set('tipoClienteId', cliente.id);",
+                  "    pm.collectionVariables.set('tipoDonoId', dono.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.2 Criar tipo temporário — sucesso (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"TIPO_TESTE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Garante que TIPO_TESTE não existe antes de criar",
+                  "pm.sendRequest({",
+                  "    url: pm.variables.get('baseUrl') + '/v1/tipos-usuario',",
+                  "    method: 'GET'",
+                  "}, (err, res) => {",
+                  "    const existing = res.json().find(t => t.nome === 'TIPO_TESTE');",
+                  "    if (existing) {",
+                  "        pm.sendRequest({",
+                  "            url: pm.variables.get('baseUrl') + '/v1/tipos-usuario/' + existing.id,",
+                  "            method: 'DELETE'",
+                  "        }, () => {});",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('ID do tipo temporário armazenado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "    pm.collectionVariables.set('tipoTesteId', body.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.3 Criar tipo — erro: nome duplicado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"TIPO_TESTE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.4 Criar tipo — erro: nome em branco (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', () => pm.response.to.have.status(422));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.5 Listar todos os tipos — sucesso (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna ao menos 3 tipos', () => {",
+                  "    pm.expect(pm.response.json()).to.be.an('array').with.length.at.least(3);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.6 Buscar tipo por ID — sucesso (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario/{{tipoTesteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario",
+                "{{tipoTesteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Nome correto', () => pm.expect(pm.response.json().nome).to.equal('TIPO_TESTE'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.7 Buscar tipo por ID — não encontrado (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario",
+                "99999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.8 Atualizar tipo — sucesso (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"TIPO_TESTE_ATUALIZADO\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario/{{tipoTesteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario",
+                "{{tipoTesteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Nome atualizado', () => pm.expect(pm.response.json().nome).to.equal('TIPO_TESTE_ATUALIZADO'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.9 Excluir tipo temporário — sucesso (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario/{{tipoTesteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario",
+                "{{tipoTesteId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.10 Excluir tipo — não encontrado (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/tipos-usuario/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "tipos-usuario",
+                "99999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "1. Usuários",
       "item": [
@@ -30,7 +604,7 @@
                 "exec": [
                   "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
                   "pm.test('Retorna id', () => pm.expect(pm.response.json().id).to.be.a('number'));",
-                  "pm.test('Tipo correto', () => pm.expect(pm.response.json().tipo).to.eql('CLIENTE'));",
+                  "pm.test('Tipo correto', () => pm.expect(pm.response.json().tipoUsuario.nome).to.eql('CLIENTE'));",
                   "// Salva o id para os próximos requests",
                   "pm.collectionVariables.set('usuarioId', pm.response.json().id);"
                 ]
@@ -40,16 +614,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao.silva@email.com\",\n  \"login\": \"joaosilva\",\n  \"senha\": \"senha123\",\n  \"tipo\": \"CLIENTE\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"42\",\n    \"complemento\": \"Apto 101\",\n    \"bairro\": \"Jardim Paulista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310-100\"\n  }\n}"
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"{{emailCliente}}\",\n  \"login\": \"{{loginCliente}}\",\n  \"senha\": \"senha123\",\n  \"tipoUsuarioId\": {{tipoClienteId}},\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"42\",\n    \"complemento\": \"Apto 101\",\n    \"bairro\": \"Jardim Paulista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310-100\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios"
+              ]
             }
           }
         },
@@ -61,7 +643,8 @@
               "script": {
                 "exec": [
                   "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
-                  "pm.test('Tipo correto', () => pm.expect(pm.response.json().tipo).to.eql('DONO_RESTAURANTE'));"
+                  "pm.test('Tipo correto', () => pm.expect(pm.response.json().tipoUsuario.nome).to.eql('DONO_RESTAURANTE'));",
+                  "pm.collectionVariables.set('donoId', pm.response.json().id);"
                 ]
               }
             }
@@ -69,16 +652,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Maria Souza\",\n  \"email\": \"maria.souza@restaurante.com\",\n  \"login\": \"mariarestaurante\",\n  \"senha\": \"senha456\",\n  \"tipo\": \"DONO_RESTAURANTE\",\n  \"endereco\": {\n    \"logradouro\": \"Av. Paulista\",\n    \"numero\": \"1000\",\n    \"complemento\": \"Sala 5\",\n    \"bairro\": \"Bela Vista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01311-000\"\n  }\n}"
+              "raw": "{\n  \"nome\": \"Maria Souza\",\n  \"email\": \"{{emailDono}}\",\n  \"login\": \"{{loginDono}}\",\n  \"senha\": \"senha456\",\n  \"tipoUsuarioId\": {{tipoDonoId}},\n  \"endereco\": {\n    \"logradouro\": \"Av. Paulista\",\n    \"numero\": \"1000\",\n    \"complemento\": \"Sala 5\",\n    \"bairro\": \"Bela Vista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01311-000\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios"
+              ]
             }
           }
         },
@@ -91,7 +682,10 @@
                 "exec": [
                   "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
                   "pm.test('ProblemDetail com title correto', () => pm.expect(pm.response.json().title).to.eql('Conflito de dados'));",
-                  "pm.test('Detail menciona o email', () => pm.expect(pm.response.json().detail).to.include('joao.silva@email.com'));"
+                  "pm.test('Detail menciona o email', () => {",
+                  "    const email = pm.collectionVariables.get('emailCliente');",
+                  "    pm.expect(pm.response.json().detail).to.include(email);",
+                  "});"
                 ]
               }
             }
@@ -99,16 +693,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Outro João\",\n  \"email\": \"joao.silva@email.com\",\n  \"login\": \"outrjoao\",\n  \"senha\": \"senha789\",\n  \"tipo\": \"CLIENTE\",\n  \"endereco\": {\n    \"logradouro\": \"Rua B\",\n    \"numero\": \"1\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01000-000\"\n  }\n}"
+              "raw": "{\n  \"nome\": \"Outro João\",\n  \"email\": \"{{emailCliente}}\",\n  \"login\": \"outrjoao\",\n  \"senha\": \"senha789\",\n  \"tipoUsuarioId\": {{tipoClienteId}},\n  \"endereco\": {\n    \"logradouro\": \"Rua B\",\n    \"numero\": \"1\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01000-000\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios"
+              ]
             }
           }
         },
@@ -129,16 +731,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"\",\n  \"email\": \"email-invalido\",\n  \"login\": \"\",\n  \"senha\": \"123\",\n  \"tipo\": \"CLIENTE\",\n  \"endereco\": {\n    \"logradouro\": \"Rua\",\n    \"numero\": \"1\",\n    \"bairro\": \"Bairro\",\n    \"cidade\": \"Cidade\",\n    \"estado\": \"SP\",\n    \"cep\": \"01000-000\"\n  }\n}"
+              "raw": "{\n  \"nome\": \"\",\n  \"email\": \"email-invalido\",\n  \"login\": \"\",\n  \"senha\": \"123\",\n  \"tipoUsuarioId\": 1,\n  \"endereco\": {\n    \"logradouro\": \"Rua\",\n    \"numero\": \"1\",\n    \"bairro\": \"Bairro\",\n    \"cidade\": \"Cidade\",\n    \"estado\": \"SP\",\n    \"cep\": \"01000-000\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios"
+              ]
             }
           }
         },
@@ -163,9 +773,19 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios?nome=Jo",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios"],
-              "query": [{ "key": "nome", "value": "Jo" }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "Jo"
+                }
+              ]
             }
           }
         },
@@ -186,9 +806,19 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios?nome=UsuarioInexistente99",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios"],
-              "query": [{ "key": "nome", "value": "UsuarioInexistente99" }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "UsuarioInexistente99"
+                }
+              ]
             }
           }
         },
@@ -208,16 +838,25 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"João da Silva\",\n  \"email\": \"joao.silva@email.com\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Acácias\",\n    \"numero\": \"100\",\n    \"complemento\": \"Casa\",\n    \"bairro\": \"Vila Madalena\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"05435-000\"\n  }\n}"
+              "raw": "{\n  \"nome\": \"João da Silva\",\n  \"email\": \"{{emailCliente}}\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Acácias\",\n    \"numero\": \"100\",\n    \"complemento\": \"Casa\",\n    \"bairro\": \"Vila Madalena\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"05435-000\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "{{usuarioId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "{{usuarioId}}"
+              ]
             }
           }
         },
@@ -237,7 +876,10 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -245,8 +887,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios/999999",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "999999"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "999999"
+              ]
             }
           }
         },
@@ -266,16 +914,25 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"João da Silva\",\n  \"email\": \"maria.souza@restaurante.com\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"42\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310-100\"\n  }\n}"
+              "raw": "{\n  \"nome\": \"João da Silva\",\n  \"email\": \"{{emailCliente}}\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"42\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310-100\"\n  }\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "{{usuarioId}}"]
+              "raw": "{{baseUrl}}/v1/usuarios/{{donoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "{{donoId}}"
+              ]
             }
           }
         }
@@ -299,7 +956,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -307,8 +967,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}/senha",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "{{usuarioId}}", "senha"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "{{usuarioId}}",
+                "senha"
+              ]
             }
           }
         },
@@ -329,7 +996,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -337,8 +1007,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}/senha",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "{{usuarioId}}", "senha"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "{{usuarioId}}",
+                "senha"
+              ]
             }
           }
         },
@@ -357,7 +1034,10 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -365,8 +1045,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios/999999/senha",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "999999", "senha"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "999999",
+                "senha"
+              ]
             }
           }
         }
@@ -383,7 +1070,10 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
-                  "pm.test('Retorna login do usuário', () => pm.expect(pm.response.json().login).to.eql('joaosilva'));"
+                  "pm.test('Retorna login do usuário', () => {",
+                  "    const login = pm.collectionVariables.get('loginCliente');",
+                  "    pm.expect(pm.response.json().login).to.eql(login);",
+                  "});"
                 ]
               }
             }
@@ -391,16 +1081,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"joaosilva\",\n  \"senha\": \"novaSenha456\"\n}"
+              "raw": "{\n  \"login\": \"{{loginCliente}}\",\n  \"senha\": \"novaSenha456\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "login"
+              ]
             }
           }
         },
@@ -420,16 +1118,24 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"login\": \"joaosilva\",\n  \"senha\": \"senhaErrada\"\n}"
+              "raw": "{\n  \"login\": \"{{loginCliente}}\",\n  \"senha\": \"senhaErrada\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/v1/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "login"
+              ]
             }
           }
         },
@@ -449,7 +1155,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -457,8 +1166,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/v1/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "login"
+              ]
             }
           }
         }
@@ -483,8 +1197,14 @@
             "method": "DELETE",
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios/999999",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "999999"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "999999"
+              ]
             }
           }
         },
@@ -504,12 +1224,746 @@
             "method": "DELETE",
             "url": {
               "raw": "{{baseUrl}}/v1/usuarios/{{usuarioId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["v1", "usuarios", "{{usuarioId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "usuarios",
+                "{{usuarioId}}"
+              ]
             }
           }
         }
       ]
+    },
+    {
+      "name": "6. Restaurantes",
+      "item": [
+        {
+          "name": "6.1 Criar restaurante — sucesso (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Retorna id', () => pm.expect(pm.response.json().id).to.be.a('number'));",
+                  "pm.test('Nome correto', () => pm.expect(pm.response.json().nome).to.eql(pm.collectionVariables.get('nomeRestaurante')));",
+                  "pm.test('Tipo cozinha correto', () => pm.expect(pm.response.json().tipoCozinha).to.eql('Italiana'));",
+                  "pm.test('donoId presente', () => pm.expect(pm.response.json().donoId).to.be.a('number'));",
+                  "pm.collectionVariables.set('restauranteId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeRestaurante}}\",\n  \"donoId\": {{donoId}},\n  \"tipoCozinha\": \"Italiana\",\n  \"endereco\": {\n    \"logradouro\": \"Rua das Flores\",\n    \"numero\": \"10\",\n    \"complemento\": \"Loja 2\",\n    \"bairro\": \"Centro\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310-100\"\n  },\n  \"horarioFuncionamento\": {\n    \"abertura\": \"11:00:00\",\n    \"fechamento\": \"23:00:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.2 Criar restaurante — erro: dono não encontrado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('ProblemDetail correto', () => pm.expect(pm.response.json().title).to.eql('Recurso não encontrado'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeRestaurante}}\",\n  \"donoId\": 999999,\n  \"tipoCozinha\": \"Japonesa\",\n  \"endereco\": {\n    \"logradouro\": \"Rua A\",\n    \"numero\": \"1\",\n    \"bairro\": \"Bairro\",\n    \"cidade\": \"Cidade\",\n    \"estado\": \"SP\",\n    \"cep\": \"00000-000\"\n  },\n  \"horarioFuncionamento\": {\n    \"abertura\": \"10:00:00\",\n    \"fechamento\": \"22:00:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.3 Criar restaurante — erro: campos obrigatórios ausentes (422)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', () => pm.response.to.have.status(422));",
+                  "pm.test('ProblemDetail correto', () => pm.expect(pm.response.json().title).to.eql('Dados inválidos'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeRestaurante}}\",\n  \"tipoCozinha\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.4 Buscar restaurantes por nome — sucesso (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna array', () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test('Contém o restaurante criado', () => {",
+                  "  const nomeEsperado = pm.collectionVariables.get('nomeRestaurante').toLowerCase();",
+                  "  const nomes = pm.response.json().map(r => r.nome.toLowerCase());",
+                  "  pm.expect(nomes.some(n => n.includes(nomeEsperado))).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes?nome={{nomeRestaurante}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "{{nomeRestaurante}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.5 Buscar restaurante por ID — sucesso (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('ID correto', () => pm.expect(pm.response.json().id).to.eql(parseInt(pm.collectionVariables.get('restauranteId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes/{{restauranteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes",
+                "{{restauranteId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.6 Buscar restaurante por ID — não encontrado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('ProblemDetail correto', () => pm.expect(pm.response.json().title).to.eql('Recurso não encontrado'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes",
+                "999999"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.7 Atualizar restaurante — sucesso (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Nome atualizado', () => pm.expect(pm.response.json().nome).to.eql('Cantina da Maria Premium'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cantina da Maria Premium\",\n  \"donoId\": {{donoId}},\n  \"tipoCozinha\": \"Italiana Contemporânea\",\n  \"endereco\": {\n    \"logradouro\": \"Av. Paulista\",\n    \"numero\": \"500\",\n    \"bairro\": \"Bela Vista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01311-000\"\n  },\n  \"horarioFuncionamento\": {\n    \"abertura\": \"12:00:00\",\n    \"fechamento\": \"00:00:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes/{{restauranteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes",
+                "{{restauranteId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.8 Atualizar restaurante — não encontrado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeRestaurante}}\",\n  \"donoId\": 1,\n  \"tipoCozinha\": \"Qualquer\",\n  \"endereco\": {\n    \"logradouro\": \"Rua X\",\n    \"numero\": \"0\",\n    \"bairro\": \"Bairro\",\n    \"cidade\": \"Cidade\",\n    \"estado\": \"SP\",\n    \"cep\": \"00000-000\"\n  },\n  \"horarioFuncionamento\": {\n    \"abertura\": \"10:00:00\",\n    \"fechamento\": \"22:00:00\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes",
+                "999999"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Itens de Cardápio",
+      "item": [
+        {
+          "name": "Adicionar item ao cardápio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"{{nomeItemCardapio}}\",\n  \"descricao\": \"Clássica pizza italiana com molho de tomate e mussarela\",\n  \"preco\": 35.9,\n  \"disponivel\": true,\n  \"fotoPath\": \"/fotos/pizza-margherita.jpg\",\n  \"restauranteId\": {{restauranteId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('itemCardapioId', body.id);",
+                  "pm.test('Item criado com id', () => {",
+                  "    pm.expect(body.id).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar itens por restaurante",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio?restauranteId={{restauranteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio"
+              ],
+              "query": [
+                {
+                  "key": "restauranteId",
+                  "value": "{{restauranteId}}"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Retorna array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar item por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/{{itemCardapioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "{{itemCardapioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Nome correto', () => {",
+                  "    const body = pm.response.json();",
+                  "    const nomeEsperado = pm.collectionVariables.get('nomeItemCardapio');",
+                  "    pm.expect(body.nome).to.equal(nomeEsperado);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar item inexistente (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "99999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('Mensagem de erro', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.title).to.equal('Recurso não encontrado');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar item do cardápio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Pizza Margherita Especial\",\n  \"descricao\": \"Com molho especial artesanal e mussarela de búfala\",\n  \"preco\": 42.9,\n  \"disponivel\": true,\n  \"fotoPath\": \"/fotos/pizza-margherita-especial.jpg\"\n\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/{{itemCardapioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "{{itemCardapioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Nome atualizado', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.nome).to.equal('Pizza Margherita Especial');",
+                  "    pm.expect(body.preco).to.equal(42.90);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcar item como indisponível",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Pizza Margherita Especial\",\n  \"descricao\": \"Com molho especial artesanal e mussarela de búfala\",\n  \"preco\": 42.9,\n  \"disponivel\": false,\n  \"fotoPath\": \"/fotos/pizza-margherita-especial.jpg\"\n\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/{{itemCardapioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "{{itemCardapioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Disponibilidade atualizada', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.disponivel).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar item inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Qualquer\",\n  \"descricao\": \"Desc\",\n  \"preco\": 10.0,\n  \"disponivel\": true\n\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "99999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Adicionar item com dados inválidos (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"\",\n  \"preco\": -1.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', () => pm.response.to.have.status(422));",
+                  "pm.test('Título de erro correto', () => {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.title).to.equal('Dados inválidos');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir item do cardápio",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/{{itemCardapioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "{{itemCardapioId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir item inexistente (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v1/itens-cardapio/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "itens-cardapio",
+                "99999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Excluir Restaurante",
+      "item": [
+        {
+          "name": "6.9 Excluir restaurante — sucesso (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204 No Content', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes/{{restauranteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes",
+                "{{restauranteId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6.10 Excluir restaurante — não encontrado (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/v1/restaurantes/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "restaurantes",
+                "999999"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [],
+        "type": "text/javascript"
+      }
     }
   ]
 }

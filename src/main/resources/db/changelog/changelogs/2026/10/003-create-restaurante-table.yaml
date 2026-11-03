@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-restaurante-table
+      author: e-restaurante
+      changes:
+        - createTable:
+            tableName: restaurante
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tipo_cozinha
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hora_abertura
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hora_fechamento
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: end_logradouro
+                  type: VARCHAR(200)
+              - column:
+                  name: end_numero
+                  type: VARCHAR(20)
+              - column:
+                  name: end_complemento
+                  type: VARCHAR(100)
+              - column:
+                  name: end_bairro
+                  type: VARCHAR(100)
+              - column:
+                  name: end_cidade
+                  type: VARCHAR(100)
+              - column:
+                  name: end_estado
+                  type: VARCHAR(2)
+              - column:
+                  name: end_cep
+                  type: VARCHAR(10)
+              - column:
+                  name: dono_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: restaurante
+            baseColumnNames: dono_id
+            constraintName: fk_restaurante_dono
+            referencedTableName: usuario
+            referencedColumnNames: id
+
+  - changeSet:
+      id: 003-create-restaurante-indexes
+      author: e-restaurante
+      changes:
+        - createIndex:
+            tableName: restaurante
+            indexName: idx_restaurante_nome
+            columns:
+              - column:
+                  name: nome
+        - createIndex:
+            tableName: restaurante
+            indexName: idx_restaurante_dono
+            columns:
+              - column:
+                  name: dono_id

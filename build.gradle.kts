@@ -1,5 +1,6 @@
 plugins {
     java
+    jacoco
     id("org.springframework.boot") version "4.1.1"
 }
 
@@ -61,4 +62,61 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required = true
+        html.required = true
+    }
+    // Exclude infrastructure plumbing that contains no domain logic.
+    // Uses sourceSets.main.output (lazy FileTree) to avoid eager evaluation
+    // during Gradle configuration phase, which causes 0% on all core classes.
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            exclude(
+                // MapStruct generated implementations
+                "**/mapper/*MapperImpl.class",
+                // Spring Boot app entry point
+                "**/ERestauranteApplication.class",
+                // JPA entity classes (persistence model only)
+                "**/infra/database/entity/**",
+                // Spring REST DTOs (no logic)
+                "**/infra/web/json/**",
+                // JPA gateway adapters (infrastructure glue, tested via integration)
+                "**/infra/database/jpa/**",
+                // Persistence mappers (MapStruct interfaces + default helper methods)
+                "**/infra/database/mapper/**",
+                // Spring Security login endpoint (framework-owned flow)
+                "**/infra/web/LoginApi.class",
+                // Spring config classes (DI wiring, no domain logic)
+                "**/infra/config/**"
+            )
+        }
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.80".toBigDecimal()
+            }
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.80".toBigDecimal()
+            }
+        }
+    }
+    classDirectories.setFrom(tasks.jacocoTestReport.get().classDirectories)
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
 }

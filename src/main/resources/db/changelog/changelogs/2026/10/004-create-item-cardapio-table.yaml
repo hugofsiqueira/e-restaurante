@@ -1,0 +1,65 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-item-cardapio-table
+      author: e-restaurante
+      changes:
+        - createTable:
+            tableName: item_cardapio
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descricao
+                  type: TEXT
+              - column:
+                  name: preco
+                  type: DECIMAL(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: disponivel
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: foto_path
+                  type: VARCHAR(500)
+              - column:
+                  name: restaurante_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: item_cardapio
+            baseColumnNames: restaurante_id
+            constraintName: fk_item_cardapio_restaurante
+            referencedTableName: restaurante
+            referencedColumnNames: id
+
+  - changeSet:
+      id: 004-create-item-cardapio-indexes
+      author: e-restaurante
+      changes:
+        - createIndex:
+            tableName: item_cardapio
+            indexName: idx_item_cardapio_restaurante
+            columns:
+              - column:
+                  name: restaurante_id
+        - createIndex:
+            tableName: item_cardapio
+            indexName: idx_item_cardapio_nome
+            columns:
+              - column:
+                  name: nome

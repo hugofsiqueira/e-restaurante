@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-tipo-usuario-table
+      author: e-restaurante
+      changes:
+        - createTable:
+            tableName: tipo_usuario
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+
+  - changeSet:
+      id: 002-seed-tipos-usuario
+      author: e-restaurante
+      changes:
+        - insert:
+            tableName: tipo_usuario
+            columns:
+              - column:
+                  name: nome
+                  value: CLIENTE
+        - insert:
+            tableName: tipo_usuario
+            columns:
+              - column:
+                  name: nome
+                  value: DONO_RESTAURANTE
+
+  - changeSet:
+      id: 002-add-tipo-usuario-fk-to-usuario
+      author: e-restaurante
+      changes:
+        - addColumn:
+            tableName: usuario
+            columns:
+              - column:
+                  name: tipo_usuario_id
+                  type: BIGINT
+                  constraints:
+                    nullable: true
+        - addForeignKeyConstraint:
+            baseTableName: usuario
+            baseColumnNames: tipo_usuario_id
+            constraintName: fk_usuario_tipo_usuario
+            referencedTableName: tipo_usuario
+            referencedColumnNames: id
+
+  - changeSet:
+      id: 002-make-tipo-usuario-id-not-null
+      author: e-restaurante
+      changes:
+        - addNotNullConstraint:
+            tableName: usuario
+            columnName: tipo_usuario_id
+            columnDataType: BIGINT
